@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Appointment System</title>
+    <style>
+      
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            padding: 80px 20px 20px;
+            color: white;
+            text-align: center;
+        }
+
+        .navbar {
+            width: 100%;
+            background: #333;
+            color: white;
+            padding: 10px 0;
+            position: fixed;
+            top: 0;
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .navbar a {
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .navbar a:hover {
+            background: #555;
+        }
+
+        h1 {
+            margin-top: 20px;
+            font-size: 2.5rem;
+        }
+
+        .welcome {
+            color: white;
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+
+        h1{
+         color: black;   
+        }
+        .content {
+            max-width: 900px;
+            margin: 30px auto;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .feature {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .feature img {
+            max-width: 150px;
+            border-radius: 10px;
+        }
+
+        .feature p {
+            flex: 1;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+
+<div class="navbar">
+    <a href="appointments.html">Make Appointment</a>
+    <a href="view-status.html">View Appointment Status</a>
+    <a href="update-appointment.html">Update Appointment</a>
+    <a href="cancel-appointment.html">Cancel Appointment</a>
+    <a href="login.html" id="logoutBtn">Logout</a>
+</div>
+
+<h1>Doctor Appointment System</h1>
+<div id="welcomeMessage" class="welcome"></div> 
+<div class="content">
+    <h2>What You Can Do</h2>
+    <div class="feature">
+        <img src="book.jpg" alt="Make Appointment">
+        <p><strong>Book Appointments:</strong> Schedule a visit with your doctor in just a few clicks. Choose your date, time, and doctor to secure your spot.</p>
+    </div>
+    <div class="feature">
+        <img src="status.jpg" alt="View Appointment Status">
+        <p><strong>Track Appointment Status:</strong> Stay updated on your appointments. View confirmation, changes, or cancellations in real-time.</p>
+    </div>
+    <div class="feature">
+        <img src="update.png" alt="Update Appointment">
+        <p><strong>Update Appointment Details:</strong> Need to reschedule? Modify your appointment details easily to suit your availability.</p>
+    </div>
+    <div class="feature">
+        <img src="cancel.jpg" alt="Cancel Appointment">
+        <p><strong>Cancel Appointments:</strong> Can't make it? Cancel appointments effortlessly and make room for others in need.</p>
+    </div>
+</div>
+
+<script>
+    const patientId = localStorage.getItem("patientId");
+
+    // Fetch and display the patient's information
+    async function fetchPatientInfo() {
+        if (!patientId) {
+            console.error("No patient ID found in localStorage.");
+            document.getElementById('welcomeMessage').innerText = "Please log in to view your information.";
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:8080/indexs/${patientId}`);
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.statusText}`);
+            }
+
+            const patient = await response.json();
+            if (patient.first_name && patient.last_name) {
+                document.getElementById('welcomeMessage').innerText = `Welcome, ${patient.first_name} ${patient.last_name}!`;
+            } else {
+                document.getElementById('welcomeMessage').innerText = "Welcome!";
+            }
+        } catch (error) {
+            console.error("Error fetching patient's information:", error);
+            document.getElementById('welcomeMessage').innerText = "Failed to fetch patient information.";
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', fetchPatientInfo);
+
+      // Logout function
+      document.getElementById('logoutBtn').onclick = function() {
+    alert('Logged out successfully.');
+    window.location.assign("login.html");
+    }
+</script>
+
+</body>
+</html>

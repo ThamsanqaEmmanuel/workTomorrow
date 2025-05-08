@@ -1,0 +1,144 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+   
+    <header>
+        <div class="navbar">
+            <div class="left-section">
+                <h1>Telemedicine Hospital</h1>
+            </div>
+            <div class="right-section">
+                <a href="doctors.html">Appointments</a>
+                <a href="patients.html">Patients</a>
+                <a href="doctors.html">Doctors</a>
+                <a href="adminlogin.html" id="logoutBtn">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <form class="registration-form" id="registration-form">
+            <h2>Doctor's Registration Form</h2>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" placeholder="Enter your first name" required>
+                    <span class="error" id="firstNameError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" placeholder="Enter your last name" required>
+                    <span class="error" id="lastNameError"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label for="specialization">Specialization</label>
+                    <input type="tel" id="specialization" placeholder="Enter your phone specialization" required>
+                    <span class="error" id="specializationError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                    <span class="error" id="emailError"></span>
+                </div>
+                
+            </div>
+
+           
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="tel" id="phone" placeholder="Enter your phone number" required>
+                    <span class="error" id="phoneError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="schedule">Schedule</label>
+                    <input type="text" id="schedule" placeholder="Enter your schedule" required>
+                    <span class="error" id="scheduleError"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                    <span class="error" id="passwordError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <input type="password" id="confirm-password" placeholder="Confirm your password" required>
+                    <span class="error" id="confirmPasswordError"></span>
+                </div>
+               
+            </div>
+            <p>Hi Doc, are you already Registered on Telemedicine?</p> <a href="doclogin.html">Login</a> <p>here!</p>
+            <button type="submit" id="post">Register</button>
+
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('registration-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const specialization = document.getElementById('specialization').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const schedule = document.getElementById('schedule').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+          
+            // Validate inputs
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/docreg', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        firstName, lastName, specialization, email, phone, schedule, password
+                        
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    alert(result.message);
+                } else {
+                    alert(result.message);
+                    document.getElementById('registration-form').reset();
+                }
+            } catch (error) {
+                console.error('Error submitting the form:', error);
+            }
+        });
+
+         // Logout function
+         document.getElementById('logoutBtn').onclick = function() {
+            alert('Logged out successfully.');
+            window.location.assign("adminlogin.html");
+         };
+    </script>
+</body>
+</html>

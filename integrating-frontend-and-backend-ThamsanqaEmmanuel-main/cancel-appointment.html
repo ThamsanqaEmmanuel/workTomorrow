@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Appointment Status</title>
+    <link rel="stylesheet" href="appstyle.css">
+    <style>
+       
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        .modal input {
+            margin: 5px 0;
+            padding: 8px;
+            width: 100%;
+        }
+        .modal button {
+            margin-top: 10px;
+        }
+
+       
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); 
+            display: none; 
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            margin: 15% auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 60%; 
+            max-width: 500px;
+        }
+
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <a href="indexs.html">Home</a>
+    <a href="appointments.html">Make Appointment</a>
+    <a href="update-appointment.html">Update Appointment</a>
+    <a href="cancel-appointment.html">Cancel Appointment</a>
+    <a href="login.html" id="logoutBtn">Logout</a>
+</div>
+
+<h1>Your Appointment Status</h1>
+
+<table id="appointmentsTable">
+    <thead>
+        <tr>
+            <th>Patient ID</th>
+            <th>Doctor ID</th>
+            <th>Doctor First Name</th>
+            <th>Doctor Last Name</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+      
+    </tbody>
+</table>
+
+
+<div id="rescheduleModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeRescheduleModal()">&times;</span>
+        <h2>Reschedule Appointment</h2>
+        <form id="rescheduleForm">
+            <label for="newDate">New Date:</label>
+            <input type="date" id="newDate" name="newDate" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    
+    const patientId = localStorage.getItem("patientId");
+
+   
+    if (!patientId) {
+        alert("You must be logged in to view your appointments.");
+        window.location.href = "login.html";
+    }
+
+    // Fetch and display appointments for the patient
+    async function populateAppointments() {
+        try {
+            const response = await fetch(`http://localhost:8080/view-status/${patientId}`);
+        
+            if (!response.ok) {
+                if (response.status === 404) {
+                alert("No appointments found for this patient.");
+                return;
+            } else {
+                throw new Error("Failed to fetch appointments");
+            }
+            }
+            const appointments = await response.json();
+
+            const tableBody = document.getElementById('appointmentsTable').querySelector('tbody');
+            tableBody.innerHTML = ''; 
+
+            function formatDate(dateString) {
+                const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                return new Date(dateString).toLocaleDateString(undefined, options);
+            }
+
+            function formatTime(timeString) {
+                const timeParts = timeString.split(':');
+                return `${timeParts[0]}:${timeParts[1]}`; 
+            }
+
+            appointments.forEach(appointment => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${patientId}</td>
+                    <td>${appointment.doctor_id}</td>
+                    <td>${appointment.doctor_first_name}</td>
+                    <td>${appointment.doctor_last_name}</td>
+                    <td>${formatDate(appointment.appointment_date)}</td> 
+                    <td>${formatTime(appointment.appointment_time)}</td>
+                    <td>${appointment.status}</td>
+                
+                    <button onclick="deleteAppointment(${appointment.appointment_id})">Cancel</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error("Error fetching appointments:", error);
+            alert("An error occurred while retrieving your appointments.");
+        }
+    }
+
+    // Function to delete an appointment
+    async function deleteAppointment(appointment_id) {
+    if (confirm('Are you sure you want to delete this appointment?')) {
+        try {
+            const response = await fetch(`http://localhost:8080/cancel-appointment/${appointment_id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                alert('Appointment deleted successfully');
+              
+                 location.reload(); 
+            } else {
+                const data = await response.json();
+                alert(`Error: ${data.error || 'Unable to delete appointment'}`);
+            }
+        } catch (error) {
+            console.error('Error deleting appointment:', error);
+            alert('An error occurred while deleting the appointment.');
+        }
+    }
+}
+
+    // Function to open the reschedule modal
+    let currentAppointmentId = null;
+
+    function openRescheduleModal(appointmentId) {
+        console.log("Opening modal for appointmentId:", appointmentId); 
+        currentAppointmentId = appointmentId;
+        document.getElementById("rescheduleModal").style.display = "block"; l
+    }
+
+    // Function to close the modal
+    function closeRescheduleModal() {
+        document.getElementById("rescheduleModal").style.display = "none";
+    }
+
+    // Call populateAppointments when page loads
+    window.addEventListener('DOMContentLoaded', populateAppointments);
+
+    // Logout function
+    document.getElementById('logoutBtn').onclick = function() {
+        alert('Logged out successfully.');
+        window.location.assign("login.html");
+    };
+</script>
+
+</body>
+</html>

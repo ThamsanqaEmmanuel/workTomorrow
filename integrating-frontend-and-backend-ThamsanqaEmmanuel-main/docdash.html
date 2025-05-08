@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Appointment System</title>
+    <style>
+       
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            padding: 80px 20px 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .navbar {
+            width: 100%;
+            background: #333;
+            color: white;
+            padding: 10px 0;
+            position: fixed;
+            top: 0;
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .navbar a {
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .navbar a:hover {
+            background: #555;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        .welcome {
+            color: #e4eded;
+            margin-top: 20px;
+        }
+
+        .content {
+            max-width: 900px;
+            margin: 30px auto;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+
+<div class="navbar">
+    <a href="view-appointments.html">View Appointments</a>
+
+    <a href="doclogin.html" id="logoutBtn">Logout</a>
+</div>
+
+<h1>Doctor Appointment System</h1>
+<div id="welcomeMessage" class="welcome"></div> 
+
+
+<div class="content">
+    <h2>Hi Doc, Here Is What You Can Do On This Page:</h2>
+   
+    <div class="feature">
+        <img src="status.jpg" alt="View Appointment Status">
+        <p><strong>View Pending Appointments:</strong> View all Pending appointments.Confirmation, or make changes.</p>
+    </div>
+    <div class="feature">
+        <img src="update.png" alt="Update Appointment">
+        <p><strong>Update Appointment Details:</strong> TToo many Appointments at the same time? You can reschedule and patient will be alerted.</p>
+    </div>
+    
+</div>
+<script>
+    const doctorId = localStorage.getItem("doctorId");
+ 
+    // Fetch doctor details and populate welcome message
+    async function fetchDoctorInfo(doctorId) {
+        if (!doctorId) {
+            console.error("No Doctor ID found in localStorage.");
+            document.getElementById('welcomeMessage').innerText = "Please log in to view your information.";
+            return;
+        }
+ 
+        try {
+            console.log(`Fetching info for Doctor ID: ${doctorId}`);
+            const response = await fetch(`http://localhost:8080/docdash/${doctorId}`); 
+ 
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.statusText}`);
+            }
+ 
+            const doctor = await response.json();
+            console.log("Doctor data fetched:", doctor);
+ 
+            if (doctor.first_name && doctor.last_name) {
+                document.getElementById('welcomeMessage').innerText = `Welcome, Dr. ${doctor.first_name} ${doctor.last_name}!`;
+            } else {
+                console.error("Doctor first name or last name missing in response:", doctor);
+                document.getElementById('welcomeMessage').innerText = "Welcome!";
+            }
+        } catch (error) {
+            console.error("Error fetching doctor's information:", error);
+            document.getElementById('welcomeMessage').innerText = "Failed to fetch Doctor information.";
+        }
+    }
+ 
+    // Call fetchDoctorInfo when the page loads
+    window.addEventListener('DOMContentLoaded', () => fetchDoctorInfo(doctorId));
+
+    // Logout function
+    document.getElementById('logoutBtn').onclick = function() {
+    alert('Logged out successfully.');
+    window.location.assign("doclogin.html");
+};
+ </script>
+ 
+
+</body>
+</html>

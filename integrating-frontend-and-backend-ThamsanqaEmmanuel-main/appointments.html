@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make an Appointment</title>
+    <link rel="stylesheet" href="appstyle.css">
+</head>
+<body>
+
+<div class="navbar">
+    <a href="indexs.html">Home</a>
+    <a href="view-status.html">View Appointment Status</a>
+    <a href="update-appointment.html">Update Appointment</a>
+    <a href="cancel-appointment.html">Cancel Appointment</a>
+    <a href="login.html" id="logoutBtn">Logout</a>
+</div>
+
+<section>
+    <h2>Make an Appointment</h2>
+    <div class="form-group">
+    <form id="appointmentForm">
+        <label for="date">Date:</label>
+        <input type="date" id="date" required><br>
+
+        <label for="time">Time:</label>
+        <input type="time" id="time" required><br>
+
+        <button type="submit">Book Appointment</button>
+    </form>
+</div>
+</section>
+
+<script>
+   
+    const patientId = localStorage.getItem("patientId");
+
+    
+    if (!patientId) {
+        alert("You must be logged in to make an appointment.");
+        window.location.href = "login.html";
+    }
+
+    document.getElementById('appointmentForm').onsubmit = async function(e) {
+    e.preventDefault();
+
+    const date = document.getElementById('date').value;
+    const time = document.getElementById('time').value;
+
+    
+    const currentDate = new Date();
+    const selectedDate = new Date(date);
+    const selectedTimeParts = time.split(':');
+    selectedDate.setHours(selectedTimeParts[0], selectedTimeParts[1]);
+
+   
+    if (selectedDate < currentDate) {
+        alert('You cannot book an appointment in the past. Please select a valid future date and time.');
+        return; 
+    }
+
+    try {
+        const response = await fetch('http://localhost:8080/appointments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ patient_id: patientId, appointment_date: date, appointment_time: time })
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(result.message); 
+            document.getElementById('appointmentForm').reset();
+        } else {
+            alert(result.message || "Failed to book appointment."); 
+        }
+    } catch (error) {
+        console.error('Error booking appointment:', error);
+        alert("An error occurred while booking the appointment.");
+    }
+};
+
+
+      // Logout function
+      document.getElementById('logoutBtn').onclick = function() {
+    alert('Logged out successfully.');
+    window.location.assign("doclogin.html");
+    }
+</script>
+</body>
+</html>

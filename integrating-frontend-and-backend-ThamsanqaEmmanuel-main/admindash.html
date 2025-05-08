@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Appointments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        
+        .navbar {
+            background-color: black;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+        }
+       
+        .navbar .left-section {
+            display: flex;
+            align-items: center;
+        }
+        .navbar .left-section h1 {
+            margin: 0;
+            padding-right: 10px;
+            color: white;
+        }
+        .navbar .left-section .logo {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .navbar .right-section {
+            display: flex;
+            align-items: center;
+        }
+        .navbar a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        .navbar img {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: #fff;
+        }
+        button {
+            padding: 5px 10px;
+            margin-right: 5px;
+        }
+        .update-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+        }
+
+        .modal {
+            display: none; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; 
+        }
+
+        .modal > div {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+        }
+
+        .modal button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="left-section">
+            <img src="logo.png" alt="Telemedicine Hospital Logo" class="logo">
+            <h1>Telemedicine Hospital</h1>
+        </div>
+        <div class="right-section">
+            <a href="doctors.html">Doctors</a>
+            <a href="patients.html">Patient</a>
+            <a href="docreg.html">Register A Doctor</a>
+            <a href="adminlogin.html" id="logoutBtn">Logout</a>
+        </div>
+    </div>
+
+    <h1>Appointments Management</h1>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Appointment ID</th>
+                <th>Patient Name</th>
+                <th>Patient Surname</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Assigned Doctor Name</th>
+                <th>Surname</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="appointmentTable"></tbody>
+    </table>
+    
+    <div id="rescheduleModal" class="modal">
+        <div>
+            <h3>Reschedule Appointment</h3>
+            <label for="newDate">New Date:</label>
+            <input type="date" id="newDate" required>
+            <label for="newTime">New Time:</label>
+            <input type="time" id="newTime" required>
+            <button onclick="submitReschedule()">Save</button>
+            <button onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let currentAppointmentId = null;
+
+        async function fetchAppointments() {
+            try {
+                const response = await fetch('http://localhost:8080/admindash');
+                const appointments = await response.json();
+                const table = document.getElementById('appointmentTable');
+
+                table.innerHTML = '';
+                function formatDate(dateString) {
+                    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                    return new Date(dateString).toLocaleDateString(undefined, options);
+                }
+
+                appointments.forEach(appointment => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${appointment.appointment_id}</td>
+                        <td>${appointment.patient_first_name}</td>
+                        <td>${appointment.patient_last_name}</td>
+                        <td>${formatDate(appointment.appointment_date)}</td>
+                        <td>${appointment.appointment_time}</td>
+                        <td>${appointment.status}</td>
+                        <td>${appointment.doctor_first_name}</td>
+                        <td>${appointment.doctor_last_name}</td>
+                        <td>
+                            <button class="update-btn" onclick="openRescheduleModal(${appointment.appointment_id})">Update</button>
+                            <button class="delete-btn" onclick="deleteAppointment(${appointment.appointment_id})">Delete</button>
+                        </td>
+                    `;
+                    table.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching appointments:', error);
+            }
+        }
+
+        // Function to open the reschedule modal
+        function openRescheduleModal(appointment_id) {
+            console.log("Opening modal for appointmentId:", appointment_id); 
+            currentAppointmentId = appointment_id;
+            document.getElementById("rescheduleModal").style.display = "flex"; 
+        }
+
+        // Function to close the reschedule modal
+        function closeModal() {
+            document.getElementById("rescheduleModal").style.display = "none";  
+            currentAppointmentId = null; 
+        }
+
+        // Function to reschedule an appointment
+        async function submitReschedule() {
+            console.log("Submitting reschedule for appointment ID:", currentAppointmentId);
+            if (!currentAppointmentId) {
+                console.error("appointmentId is undefined");
+                return;
+            }
+
+            const newDate = document.getElementById("newDate").value;
+            const newTime = document.getElementById("newTime").value;
+
+            if (!newDate || !newTime) {
+                alert("Please select both date and time.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:8080/admindash/${currentAppointmentId}`, { 
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        date: newDate, 
+                        time: newTime, 
+                        status: 'Rescheduled'  
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to update appointment");
+                }
+
+                alert("Appointment updated successfully!");
+                closeModal();
+                fetchAppointments();  
+            } catch (error) {
+                console.error("Error rescheduling appointment:", error);
+                alert("An error occurred while rescheduling the appointment.");
+            }
+        }
+
+        // Function to delete an appointment
+        async function deleteAppointment(appointment_id) {
+            if (confirm('Are you sure you want to delete this appointment?')) {
+                try {
+                    await fetch(`http://localhost:8080/admindash/${appointment_id}`, { method: 'DELETE' });
+                    alert('Appointment deleted successfully');
+                    fetchAppointments();
+                } catch (error) {
+                    console.error('Error deleting appointment:', error);
+                }
+            }
+        }
+
+        
+        fetchAppointments();
+
+        // Logout function
+        document.getElementById('logoutBtn').onclick = function() {
+            alert('Logged out successfully.');
+            window.location.assign("adminlogin.html");
+        };
+    </script>
+</body>
+</html>
